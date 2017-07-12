@@ -41,9 +41,9 @@ foreach($segments as $seg){
                 },
                 "aaSorting": sort,
                 "columnDefs": [
-                    { "searchable": false, "targets": [6,7] },
-                    { "visible": last, "targets": 6 },
-                    {"visible": create, "targets":7},
+                    { "searchable": false, "targets": [6,7,8] },
+                    { "visible": last, "targets": 7 },
+                    { "visible": create, "targets": 8 },
                 ],
                 "fnCreatedRow": function (nRow, aData, iDataIndex) {
                     var str = aData[3];
@@ -73,12 +73,12 @@ foreach($segments as $seg){
             if((clicked%2)== 0){
                 last = false;
                 create = true;
-                sort = [[7, "desc"]]
+                sort = [[8, "desc"]]
                 $('a.toggle-vis').html('<i class="fa fa-clock-o" style="color:green;"> </i>{!!Lang::get("lang.last_activity")!!}');
             } else {
                 last = true;
                 create = false;
-                sort = [[6, "desc"]]
+                sort = [[7, "desc"]]
                 $('a.toggle-vis').html('<i class="fa fa-plus-square-o" style="color:green;"> </i>{!!Lang::get("lang.created-at")!!}');
 
             }

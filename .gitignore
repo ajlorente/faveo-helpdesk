@@ -2,6 +2,7 @@
 .env
 Homestead.yaml
 Homestead.json
+/app/_ide_helper.php
 /config/lfm.php
 /nbproject/private/
 /node_modules
