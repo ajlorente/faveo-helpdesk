@@ -198,7 +198,7 @@ class="active"
                         </tbody>
                     </table><!-- /.table -->
                     <div class="pull-right">
-                        <?php echo $close->setPath(url('mytickets'))->render(); ?>&nbsp;
+                        <?php echo $close->setPath(url('myorganizationtickets'))->render(); ?>&nbsp;
                     </div>
                 </div><!-- /.mail-box-messages -->
                 {!! Form::close() !!}
