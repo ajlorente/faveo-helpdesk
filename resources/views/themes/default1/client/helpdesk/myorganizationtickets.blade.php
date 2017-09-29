@@ -11,22 +11,10 @@ class="active"
 @section('content')
 <!-- Main content -->
 <div id="content" class="site-content col-md-12">
-    <?php
-    $open = App\Model\helpdesk\Ticket\Tickets::whereIn('user_id', $users)
-            ->where('status', '=', 1)
-            ->orderBy('id', 'DESC')
-            ->paginate(20);
-    ?>
-    <?php
-    $close = App\Model\helpdesk\Ticket\Tickets::whereIn('user_id', $users)
-            ->whereIn('status', [2, 3])
-            ->orderBy('id', 'DESC')
-            ->paginate(20);
-    ?>
     <div class="nav-tabs-custom">
         <ul class="nav nav-tabs">
             <li class="active"><a href="#tab_1" data-toggle="tab" aria-expanded="true">{!! Lang::get('lang.opened') !!} <small class="label bg-orange">{!! $open->total() !!}</small></a></li>
-            <li class=""><a href="#tab_2" data-toggle="tab" aria-expanded="false">{!! Lang::get('lang.closed') !!} <small class="label bg-green">{!! $close->total() !!}</small></a></li>
+            <li class=""><a id="tab_closed" href="#tab_2" data-toggle="tab" aria-expanded="false">{!! Lang::get('lang.closed') !!} <small class="label bg-green">{!! $close->total() !!}</small></a></li>
         </ul>
         <div class="tab-content">
             <div class="tab-pane active" id="tab_1">
@@ -37,7 +25,13 @@ class="active"
                     <a class="btn btn-default btn-sm" id="click1"><i class="fa fa-refresh"></i></a>
                     <input type="submit" class="btn btn-default text-yellow btn-sm" name="submit" value="{!! Lang::get('lang.close') !!}">
                     <div class="pull-right" id="refresh21">
-                        {!! $open->count().'-'.$open->total(); !!}
+                        Registros {!! $open->perPage()*($open->currentPage()-1)+1 !!} al 
+                        @if ($open->perPage()*$open->currentPage() < $open->total())
+                        {!! $open->perPage()*$open->currentPage() !!}
+                        @else
+                        {!! $open->total() !!}
+                        @endif
+                         de {!! $open->total(); !!}
                     </div>
                 </div>
                 <div class=" table-responsive mailbox-messages"  id="refresh1">
@@ -67,18 +61,17 @@ class="active"
                         </thead>
                         <tbody id="hello">
                             @foreach ($open  as $ticket )
-                            <tr <?php if ($ticket->seen_by == null) { ?> style="color:green;" <?php }
-    ?> >
+                            <tr <?php if ($ticket->seen_by == null) { ?> style="color:green;" <?php } ?> >
                                 <td><input type="checkbox" class="icheckbox_flat-blue" name="select_all[]" value="{{$ticket->id}}"/></td>
                                 <?php
                                 $title = App\Model\helpdesk\Ticket\Ticket_Thread::where('ticket_id', '=', $ticket->id)->orderBy('id')->first();
                                 $string = strip_tags($title->title);
                                 if (strlen($string) > 40) {
                                     $stringCut = substr($string, 0, 25);
-                                    $string = $stringCut.'....';
+                                    $string = $stringCut . '....';
                                 }
                                 $TicketData = App\Model\helpdesk\Ticket\Ticket_Thread::where('ticket_id', '=', $ticket->id)
-                                    ->where('user_id', '!=' , null)
+                                    ->where('user_id', '!=', null)
                                     ->max('id');
                                 $TicketDatarow = App\Model\helpdesk\Ticket\Ticket_Thread::where('id', '=', $TicketData)->first();
                                 $LastResponse = App\User::where('id', '=', $TicketDatarow->user_id)->first();
@@ -100,19 +93,19 @@ class="active"
                                 ?>
                                 <td class="mailbox-name"><a href="{!! URL('check_ticket',[Crypt::encrypt($ticket->id)]) !!}" title="{!! $title->title !!}">{{$string}}   </a> ({!! $count!!}) <i class="fa fa-comment"></i></td>
                                 <td class="mailbox-Id">#{!! $ticket->ticket_number !!}</td>
-                                <?php $priority = App\Model\helpdesk\Ticket\Ticket_Priority::where('priority_id', '=', $ticket->priority_id)->first(); ?>
+                                    <?php $priority = App\Model\helpdesk\Ticket\Ticket_Priority::where('priority_id', '=', $ticket->priority_id)->first(); ?>
                                 <td class="mailbox-priority"><spam class="btn btn-{{$priority->priority_color}} btn-xs">{{$priority->priority}}</spam></td>
 
                         <td class="mailbox-last-reply" style="color: {!! $rep !!}">{!! $username !!}</td>
                         <td class="mailbox-last-activity">{!! $title->updated_at !!}</td>
-                        <?php $status = App\Model\helpdesk\Ticket\Ticket_Status::where('id', '=', $ticket->status)->first(); ?>
+                            <?php $status = App\Model\helpdesk\Ticket\Ticket_Status::where('id', '=', $ticket->status)->first(); ?>
                         <td class="mailbox-date">{!! $status->name !!}</td>
                         </tr>
                         @endforeach
                         </tbody>
                     </table><!-- /.table -->
                     <div class="pull-right">
-                        <?php echo $open->setPath(url('mytickets'))->render(); ?>&nbsp;
+                        <?php echo $open->setPath(url('myorganizationtickets'))->appends(['tab' => 'open'])->render(); ?>&nbsp;
                     </div>
                 </div><!-- /.mail-box-messages -->
                 {!! Form::close() !!}
@@ -126,7 +119,13 @@ class="active"
                     <a class="btn btn-default btn-sm" id="click2"><i class="fa fa-refresh"></i></a>
                     <input type="submit" class="btn btn-default text-blue btn-sm" name="submit" value="{!! Lang::get('lang.open') !!}">
                     <div class="pull-right" id="refresh22">
-                        {!! $close->count().'-'.$close->total(); !!}
+                        Registros {!! $close->perPage()*($close->currentPage()-1)+1 !!} al 
+                        @if ($close->perPage()*$close->currentPage() < $close->total())
+                        {!! $close->perPage()*$close->currentPage() !!}
+                        @else
+                        {!! $close->total() !!}
+                        @endif
+                         de {!! $close->total(); !!}
                     </div>
                 </div>
                 <div class=" table-responsive mailbox-messages" id="refresh2">
@@ -156,8 +155,7 @@ class="active"
                         </thead>
                         <tbody id="hello">
                             @foreach ($close  as $ticket )
-                            <tr <?php if ($ticket->seen_by == null) { ?> style="color:green;" <?php }
-                        ?> >
+                            <tr <?php if ($ticket->seen_by == null) { ?> style="color:green;" <?php } ?> >
                                 <td><input type="checkbox" class="icheckbox_flat-blue" name="select_all[]" value="{{$ticket->id}}"/></td>
                                 <?php
                                 $title = App\Model\helpdesk\Ticket\Ticket_Thread::where('ticket_id', '=', $ticket->id)->first();
@@ -184,21 +182,22 @@ class="active"
                                 foreach ($titles as $title) {
                                     $title = $title;
                                 }
+
                                 ?>
                                 <td class="mailbox-name"><a href="{!! URL('check_ticket',[Crypt::encrypt($ticket->id)]) !!}" title="{!! $title->title !!}">{{$string}}   </a> ({!! $count!!}) <i class="fa fa-comment"></i></td>
                                 <td class="mailbox-Id">#{!! $ticket->ticket_number !!}</td>
-                                <?php $priority = App\Model\helpdesk\Ticket\Ticket_Priority::where('priority_id', '=', $ticket->priority_id)->first(); ?>
+                                    <?php $priority = App\Model\helpdesk\Ticket\Ticket_Priority::where('priority_id', '=', $ticket->priority_id)->first(); ?>
                                 <td class="mailbox-priority"><spam class="btn btn-{{$priority->priority_color}} btn-xs">{{$priority->priority}}</spam></td>
                         <td class="mailbox-last-reply" style="color: {!! $rep !!}">{!! $username !!}</td>
                         <td class="mailbox-last-activity">{!! $title->updated_at !!}</td>
-                        <?php $status = App\Model\helpdesk\Ticket\Ticket_Status::where('id', '=', $ticket->status)->first(); ?>
+                            <?php $status = App\Model\helpdesk\Ticket\Ticket_Status::where('id', '=', $ticket->status)->first(); ?>
                         <td class="mailbox-date">{!! $status->name !!}</td>
                         </tr>
                         @endforeach
                         </tbody>
                     </table><!-- /.table -->
                     <div class="pull-right">
-                        <?php echo $close->setPath(url('myorganizationtickets'))->render(); ?>&nbsp;
+                        <?php echo $close->setPath(url('myorganizationtickets'))->appends(['tab' => 'close'])->render(); ?>&nbsp;
                     </div>
                 </div><!-- /.mail-box-messages -->
                 {!! Form::close() !!}
@@ -207,9 +206,9 @@ class="active"
     </div>
 </div>
 <script>
-    $(function() {
+    $(function () {
         //Enable check and uncheck all functionality
-        $(".checkbox-toggle").click(function() {
+        $(".checkbox-toggle").click(function () {
             var clicks = $(this).data('clicks');
             if (clicks) {
                 //Uncheck all checkboxes
@@ -224,9 +223,9 @@ class="active"
         });
     });
 
-    $(function() {
+    $(function () {
         // Enable check and uncheck all functionality
-        $(".checkbox-toggle").click(function() {
+        $(".checkbox-toggle").click(function () {
             var clicks = $(this).data('clicks');
             if (clicks) {
                 //Uncheck all checkboxes
@@ -239,20 +238,26 @@ class="active"
         });
     });
 
-    $(document).ready(function() { /// Wait till page is loaded
-        $('#click1').click(function() {
+    $(document).ready(function () { /// Wait till page is loaded
+        $('#click1').click(function () {
             $('#refresh1').load('mytickets #refresh1');
             $('#refresh21').load('mytickets #refresh21');
             $("#show1").show();
         });
     });
 
-    $(document).ready(function() { /// Wait till page is loaded
-        $('#click2').click(function() {
+    $(document).ready(function () { /// Wait till page is loaded
+        $('#click2').click(function () {
             $('#refresh2').load('mytickets #refresh2');
             $('#refresh22').load('mytickets #refresh22');
             $("#show2").show();
         });
+    });
+    // Show correct tab
+    $(document).ready(function () {
+        @if ($active_tab === 'close')
+        $('#tab_closed').tab('show');
+        @endif
     });
 
 </script>

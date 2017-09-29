@@ -202,22 +202,49 @@ class GuestController extends Controller
      *
      * @return type Response
      */
-    public function getMyorganizationticket()
+    public function getMyorganizationticket(Request $request)
     {
+        // Get page
+        $page = 1;
+        $pageOpen = 1;
+        $pageClose = 1;
+        if ($request->get('page')) {
+            $page = (int) $request->get('page');
+        }
+        // Active tab
+        $activeTab = 'open';
+        if ($request->get('tab') && ($request->get('tab') == 'close')) {
+            $pageClose = $page;
+            $activeTab = 'close';
+        } else {
+            $pageOpen = $page;
+        }
         $organization = Organization::where('head', '=', Auth::user()->id)->get();
-        $organization_users = [];
+        $users = [];
         // Check if user is manager
         if ($organization->count() > 0) {
             foreach ($organization as $org) {
                 $org_model = Organization::find($org->id);
-                $organization_users = $org_model->getUserIds();
+                $users = $org_model->getUserIds();
             }
         } else {
-            $organization_users = [Auth::user()->id];
+            $users = [Auth::user()->id];
         }
-
+        // Open tickets
+        $open = Tickets::whereIn('user_id', $users)
+            ->where('status', '=', 1)
+            ->orderBy('id', 'DESC')
+            ->paginate(20, ['*'], 'page', $pageOpen);
+        // Closed tickets
+        $close = Tickets::whereIn('user_id', $users)
+            ->whereIn('status', [2, 3])
+            ->orderBy('id', 'DESC')
+            ->paginate(20, ['*'], 'page', $pageClose);
         return view('themes.default1.client.helpdesk.myorganizationtickets', [
-            'users' => $organization_users,
+            'users' => $users,
+            'open'  => $open,
+            'close' => $close,
+            'active_tab' => $activeTab
         ]);
     }
 
